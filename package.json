@@ -1,0 +1,8 @@
+{
+  "name": "plant-care-bot",
+  "version": "1.0.0",
+  "description": "AI Plant Care Bot for Faulkner's Nursery",
+  "dependencies": {
+    "openai": "^3.3.0"
+  }
+}
