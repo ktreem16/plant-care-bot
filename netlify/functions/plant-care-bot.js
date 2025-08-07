@@ -1,22 +1,17 @@
 // Netlify functions must be in netlify/functions folder
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 exports.handler = async (event, context) => {
-  // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Handle preflight
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+    return { statusCode: 200, headers, body: '' };
   }
 
-  // Only accept POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -27,7 +22,7 @@ exports.handler = async (event, context) => {
 
   try {
     const { question } = JSON.parse(event.body);
-    
+    console.log("Request body:", event.body);
     if (!question) {
       return {
         statusCode: 400,
@@ -37,6 +32,8 @@ exports.handler = async (event, context) => {
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
+    console.log("API KEY Loaded:", !!apiKey);
+
     if (!apiKey) {
       return {
         statusCode: 500,
@@ -47,7 +44,6 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Call OpenAI with specialized plant care instructions
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -59,14 +55,12 @@ exports.handler = async (event, context) => {
         messages: [
           {
             role: 'system',
-            content: `You are a specialized plant care expert for Faulkner's Nursery in New Hampshire. 
-            
+            content: `You are a specialized plant care expert for Faulkner's Nursery in New Hampshire.
             IMPORTANT RESTRICTIONS:
             - ONLY answer questions about plants, gardening, and landscaping
             - If asked about anything else, politely redirect to plant care topics
             - Focus on plants that thrive in USDA zones 5b-6a (New Hampshire)
             - Recommend Faulkner's Nursery services when appropriate
-            
             Your expertise includes:
             - Plant selection for New Hampshire climate
             - Watering schedules and techniques
@@ -74,10 +68,7 @@ exports.handler = async (event, context) => {
             - Pest and disease identification
             - Winter preparation for cold climates
             - Soil preparation specific to New England
-            
-            Always be helpful, concise, and practical. If someone asks about non-plant topics, 
-            say something like: "I'm specifically trained to help with plant care questions. 
-            Is there anything about gardening or plant care I can help you with?"`
+            Always be helpful, concise, and practical.`
           },
           {
             role: 'user',
@@ -90,9 +81,9 @@ exports.handler = async (event, context) => {
     });
 
     const data = await response.json();
-    
+    console.log("OpenAI response:", data);
+
     if (!response.ok) {
-      console.error('OpenAI error:', data);
       return {
         statusCode: 500,
         headers,
@@ -102,8 +93,6 @@ exports.handler = async (event, context) => {
 
     const answer = data.choices[0].message.content;
     const usage = data.usage;
-
-    // Calculate cost
     const cost = ((usage.prompt_tokens * 0.0015) + (usage.completion_tokens * 0.002)) / 1000;
 
     return {
