@@ -1,5 +1,5 @@
 // Netlify functions must be in netlify/functions folder
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
   const headers = {

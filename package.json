@@ -2,7 +2,6 @@
   "name": "plant-care-bot",
   "version": "1.0.0",
   "description": "AI Plant Care Bot for Faulkner's Nursery",
-  "type": "module",
   "dependencies": {
     "node-fetch": "^2.7.0",
     "openai": "^3.3.0"
