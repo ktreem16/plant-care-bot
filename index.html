@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Plant Care Bot API</title>
+  <meta charset="UTF-8">
+  <title>Faulkner’s Plant Care Chatbot</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    iframe {
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
+  </style>
 </head>
 <body>
-    <h1>Plant Care Bot API</h1>
-    <p>This is the API endpoint for the Faulkner's Nursery Plant Care Bot.</p>
-    <p>The bot endpoint is available at: <code>/.netlify/functions/plant-care-bot</code></p>
-    <p>This endpoint only accepts POST requests from the chat widget.</p>
+  <!-- Embed an iframe that loads the chatbot UI -->
+  <iframe src="/chat.html"></iframe>
 </body>
 </html>
