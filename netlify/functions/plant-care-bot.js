@@ -47,13 +47,19 @@ exports.handler = async (event, context) => {
 
     const apiKey = process.env.OPENAI_API_KEY;
     console.log("API KEY Loaded:", !!apiKey);
+    console.log("API KEY length:", apiKey ? apiKey.length : 0);
 
     if (!apiKey) {
+      // Return a test response if no API key is set
       return {
-        statusCode: 500,
+        statusCode: 200,
         headers,
         body: JSON.stringify({ 
-          error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables.' 
+          answer: '⚠️ The OpenAI API key is not configured. Please add OPENAI_API_KEY to your Netlify environment variables. Go to Netlify Dashboard > Site Settings > Environment Variables.',
+          usage: {
+            tokens: 0,
+            estimatedCost: '0.0000'
+          }
         })
       };
     }
@@ -101,12 +107,31 @@ exports.handler = async (event, context) => {
 
     if (!response.ok) {
       console.error('OpenAI API error:', data);
+      
+      // Check for specific error types
+      if (response.status === 401) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            answer: '⚠️ Invalid API key. Please check your OPENAI_API_KEY in Netlify environment variables.',
+            usage: {
+              tokens: 0,
+              estimatedCost: '0.0000'
+            }
+          })
+        };
+      }
+      
       return {
-        statusCode: 500,
+        statusCode: 200,
         headers,
         body: JSON.stringify({ 
-          error: 'Failed to get AI response', 
-          details: data.error || 'Unknown error'
+          answer: `⚠️ OpenAI API error: ${data.error?.message || 'Unknown error'}`,
+          usage: {
+            tokens: 0,
+            estimatedCost: '0.0000'
+          }
         })
       };
     }
@@ -142,12 +167,19 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('Function error:', error);
     console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    
+    // Return a user-friendly error message
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
       body: JSON.stringify({ 
-        error: 'An error occurred', 
-        message: error.message || 'Unknown error'
+        answer: `⚠️ An error occurred: ${error.message}. Please check the Netlify function logs for details.`,
+        usage: {
+          tokens: 0,
+          estimatedCost: '0.0000'
+        }
       })
     };
   }
