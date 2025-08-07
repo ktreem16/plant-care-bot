@@ -1,6 +1,6 @@
 (function() {
   const iframe = document.createElement('iframe');
-  iframe.src = 'https://YOUR_NETLIFY_SITE/chat.html';
+  iframe.src = 'https://frolicking-daffodil-ab69de.netlify.app/';
   iframe.style.position = 'fixed';
   iframe.style.bottom = '24px';
   iframe.style.right = '24px';
