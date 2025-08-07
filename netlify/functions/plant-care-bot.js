@@ -21,8 +21,22 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { question } = JSON.parse(event.body);
     console.log("Request body:", event.body);
+    
+    // Parse request body
+    let question;
+    try {
+      const body = JSON.parse(event.body);
+      question = body.question;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid JSON in request body' })
+      };
+    }
+    
     if (!question) {
       return {
         statusCode: 400,
@@ -44,6 +58,7 @@ exports.handler = async (event, context) => {
       };
     }
 
+    console.log('Making request to OpenAI...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -81,18 +96,35 @@ exports.handler = async (event, context) => {
     });
 
     const data = await response.json();
-    console.log("OpenAI response:", data);
+    console.log("OpenAI response status:", response.status);
+    console.log("OpenAI response data:", JSON.stringify(data));
 
     if (!response.ok) {
+      console.error('OpenAI API error:', data);
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Failed to get AI response' })
+        body: JSON.stringify({ 
+          error: 'Failed to get AI response', 
+          details: data.error || 'Unknown error'
+        })
+      };
+    }
+
+    // Check if the response has the expected structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected OpenAI response structure:', data);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Unexpected response format from OpenAI'
+        })
       };
     }
 
     const answer = data.choices[0].message.content;
-    const usage = data.usage;
+    const usage = data.usage || { total_tokens: 0, prompt_tokens: 0, completion_tokens: 0 };
     const cost = ((usage.prompt_tokens * 0.0015) + (usage.completion_tokens * 0.002)) / 1000;
 
     return {
@@ -109,10 +141,14 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Function error:', error);
+    console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'An error occurred' })
+      body: JSON.stringify({ 
+        error: 'An error occurred', 
+        message: error.message || 'Unknown error'
+      })
     };
   }
 };
